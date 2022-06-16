@@ -1,5 +1,5 @@
 {
-	"name": "boilerplate-project-messagebaord",
+	"name": "@hurricanemark/anonymousmessagebaord",
 	"version": "0.0.1",
 	"description": "InfoSec project for freeCodeCamp",
 	"main": "server.js",
@@ -19,7 +19,7 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/freeCodeCamp/boilerplate-project-messageboard"
+		"url": "https://github.com/hurricanemark/message-board-anonymous/"
 	},
 	"keywords": [
 		"node",
