@@ -1,5 +1,10 @@
 'use strict';
 require('dotenv').config();
+/*
+ * .env file should contain DB = "mongodb+srv://[userid]:[passwd]@cluster0.brf1j.mongodb.net/[database]?"
+ * NODE_ENV = test
+ */
+
 const express     = require('express');
 const bodyParser  = require('body-parser');
 const cors        = require('cors');
@@ -7,8 +12,40 @@ const cors        = require('cors');
 const apiRoutes         = require('./routes/api.js');
 const fccTestingRoutes  = require('./routes/fcctesting.js');
 const runner            = require('./test-runner');
-
 const app = express();
+
+/* security measures */
+const helmet = require('helmet');
+const ninetyDaysInSeconds = 90*24*60*60;
+/* parent helmet */
+app.use(helmet({
+  hidePoweredBy: { },
+  frameguard: {        //configure
+    action: "sameorigin" 
+  },
+  xssFilter: { setOnOldIE: true },
+  hsts: {
+    maxAge: ninetyDaysInSeconds,
+    preload: false,
+  },
+  dnsPrefetchControl: {
+    allow: false,
+  },
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'"],
+    },
+  },
+  permittedCrossDomainPolicies: {
+    permittedPolicies: "by-content-type",
+  },
+  // referrerPolicy: {policy: 'strict-origin-when-cross-origin'},
+  referrerPolicy: {policy: 'same-origin'},
+}));
+
+
 
 app.use('/public', express.static(process.cwd() + '/public'));
 
@@ -48,6 +85,9 @@ app.use(function(req, res, next) {
 
 //Start our server and tests!
 const listener = app.listen(process.env.PORT || 3000, function () {
+  console.log(process.env.NODE_ENV);
+  //console.log(process.env.DB);
+  
   console.log('Your app is listening on port ' + listener.address().port);
   if(process.env.NODE_ENV==='test') {
     console.log('Running Tests...');
