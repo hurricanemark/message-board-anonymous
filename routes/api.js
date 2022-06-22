@@ -10,6 +10,8 @@ const { Schema } = mongoose;
 
 /*
 data including text and delete_password. The saved database record will have at least the fields _id, text, created_on(date & time), bumped_on(date & time, starts same as created_on), reported (boolean), delete_password, & replies (array)
+
+replies = [{text, created_on, delete_password, & reported}]
 */
 
 
@@ -19,7 +21,12 @@ const msgboardSchema = new Schema({
   delete_passwd: {type : String, require: true},
   created_on : { type : Date, default : Date.now},
   bumped_on : { type : Date, default : Date.now},
-  replies: [{ text: String }],
+  replies: [
+    { text: String },
+    { created_on: Date, default: Date.now},
+    { delete_password: String},
+    { reported: Boolean, default: false }
+  ],
   reported: Boolean
 });
 const msgboard = mongoose.model('mesgboard', msgboardSchema);
@@ -114,6 +121,7 @@ data including text and delete_password. The saved database record will have at 
         } catch (err) { console.log(err); }
       });    
 
+/* REPLIES */
   app.route('/api/replies/:board')
 /*
 You can send a POST request to /api/replies/{board} with form data including text, delete_password, & thread_id. This will update the bumped_on date to the comment's date. In the thread's replies array, an object will be saved with at least the properties _id, text, created_on, delete_password, & reported.
@@ -136,7 +144,11 @@ You can send a POST request to /api/replies/{board} with form data including tex
           });
           if (!found) {
             /* new post, let's save it */
-              aBoardData.replies.push({"text":text}); 
+            /* text, created_on, delete_password, & reported */
+              aBoardData.replies.push({"text":text,
+                                      "created_on": Date.now,
+                                      "delete_password": delete_password,
+                                      "reported": true}); 
           }
           /* save aBoardData with replies[] */
           aBoardData.bumped_on = new Date;
@@ -179,5 +191,4 @@ You can send a POST request to /api/replies/{board} with form data including tex
       
       
     })
-
 };
