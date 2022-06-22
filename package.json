@@ -1,5 +1,5 @@
 {
-	"name": "@hurricanemark/anonymousmessagebaord",
+	"name": "@hurricanemark/anonymousmessageboard",
 	"version": "0.0.1",
 	"description": "InfoSec project for freeCodeCamp",
 	"main": "server.js",
@@ -14,7 +14,7 @@
 		"dotenv": "^8.2.0",
 		"express": "^4.14.0",
 		"helmet": "^3.23.3",
-		"mocha": "^3.2.0",
+		"mocha": "^10.0.0",
 		"mongoose": "^6.3.5"
 	},
 	"repository": {

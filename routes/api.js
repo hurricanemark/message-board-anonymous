@@ -62,12 +62,12 @@ async function createBoard(boardName, password, msgtext = '') {
 async function saveBoard(boardName, password, message) {
   let record = {};
   const foundBoard = await findBoard(boardName, password, message);
-  console.log("Found Board in dbase : ", foundBoard);
+  // console.log("Found Board in dbase : ", foundBoard);
   if (!foundBoard) {
     try {
       const createNewMsgBoard = await createBoard(boardName, password, message);
       record = createNewMsgBoard;
-      console.log("Created new board data: ",record);
+      // console.log("Created new board data: ",record);
       return record;
     } catch(err) { console.log(err); }
   } else {
@@ -90,7 +90,7 @@ data including text and delete_password. The saved database record will have at 
     .post(async function (req, res){
         const { delete_password, text } = req.body;
         const brdname  = req.params.board;
-        console.log("POST threads Data ", brdname, delete_password, text);
+        // console.log("POST threads Data ", brdname, delete_password, text);
         
         /* valid data? let's save */
         try {
@@ -101,15 +101,14 @@ data including text and delete_password. The saved database record will have at 
     })
   
     .get(async function (req, res) {
-      let boardname, passwd, text = '';
       let retArr = [];
-      boardname = req.params.board;
+      let boardname = req.params.board;
       
-      console.log('GET board: ', req.params._id, boardname, passwd, text);
+      //console.log('GET boardByName: ', req.params._id, boardname, passwd, text);
 
         try {
           const getBoard = await findBoardByName(boardname); 
-          console.log("GOT board: ", getBoard);
+          // console.log("GET boardByName: ", getBoard);
           retArr.push(getBoard);
           res.json(retArr);
         } catch (err) { console.log(err); }
@@ -122,31 +121,33 @@ You can send a POST request to /api/replies/{board} with form data including tex
     .post(async function (req, res) {
       const { text, delete_password, thread_id } = req.body;
       const brdname  = req.params.board;
-      console.log('POST replies Data: -- %s -- %s', req.body, req.params.board);
+      // console.log('POST replies Data: -- %s -- %s', req.body, req.params.board);
       /* valid data? let's save */
 
       try {
         const aBoardData = await findById(thread_id, brdname, delete_password);
-        let found = false;
-        aBoardData.replies.forEach(element => {
-          if (element.delete_password == delete_password && element.text == text) {
-            found = true;
-            console.log("Found match");
+        if (aBoardData.delete_passwd = delete_password) {
+          let found = false;
+          aBoardData.replies.forEach(element => {
+            if (element.text == text) {
+              found = true;
+              // console.log("Found match");
+            }
+          });
+          if (!found) {
+            /* new post, let's save it */
+              aBoardData.replies.push({"text":text}); 
           }
-        });
-        if (!found) {
-          /* new post, let's save it */
-            aBoardData.replies.push({"text":text}); 
+          /* save aBoardData with replies[] */
+          aBoardData.bumped_on = new Date;
+          aBoardData.reported = true;
+          // console.log("Replies -- FoundBoard: ", aBoardData);
+          try { 
+            await aBoardData.save();
+          } catch(err) { console.log("==> Save Replies err: ", err); }
+          
+          res.json(aBoardData);
         }
-        /* save aBoardData with replies[] */
-        aBoardData.bumped_on = new Date;
-        aBoardData.reported = true;
-        console.log("Replies -- FoundBoard: ", aBoardData);
-        try { 
-          await aBoardData.save();
-        } catch(err) { console.log("==> Save Replies err: ", err); }
-        
-        res.json(aBoardData);
       } catch(err) { console.log(err); }
     })
   
@@ -155,7 +156,7 @@ You can send a POST request to /api/replies/{board} with form data including tex
   You can send a DELETE request to /api/threads/{board} and pass along the thread_id & delete_password to delete the thread. Returned will be the string incorrect password or success.
       */
     .get(async function (req, res){
-      console.log('>>>>>>  GET replies: ',req.params);
+      // console.log('>>>>>>  GET replies: ',req.params);
       try {
         let allBoards = await findBoardByName(req.params.board);
 
@@ -168,15 +169,15 @@ You can send a POST request to /api/replies/{board} with form data including tex
     */
     .delete(async function (req, res, next) {
       const { thread_id, reply_id, delete_password } = req.body;
-      console.log('DELETE ', thread_id, reply_id, delete_password);
+      // console.log('DELETE ', thread_id, reply_id, delete_password + '\n');
       try {
-        await msgboard.findByIdAndUpdate(thread_id, {$push: {"replies": {_id: reply_id, text: 'deleted'}}}, {upsert: true, new : false});
+        await msgboard.findAndUpdate({_id: thread_id, delete_passwd: delete_password, "replies": {_id : reply_id, text: 'deleted'}}).exec();
         
         res.json('success');
 
-      } catch(err) { console.log("Delete Replies findById err: ", err); }     
+      } catch(err) { res.json("incorrect password"); }     
       
-      res.json("incorrect password");
+      
     })
 
 };
